@@ -1,8 +1,5 @@
-1. npm install
-2. npm install cypress --save-dev
-3. npx cypress open or you can use commands in package.json file :
+# Refactor Cypress API tests example
 
- {...
-    "cy:open": "cypress open",
-    "cy:run": "cypress run --browser chrome",
-...}
+📺 Watch the following videos showing how I refactored the API tests in this repo
+
+- [Refactor Cypress API Tests Part 1: Use cy-spok Plugin](https://youtu.be/zGO3LNx-agk)
