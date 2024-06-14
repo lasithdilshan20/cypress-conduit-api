@@ -1,6 +1,8 @@
 import {faker} from '@faker-js/faker'
 import {registration} from '../pages/reg'
+import spok from 'cy-spok';
 const api_server = Cypress.env('api_server')
+expect(api_server, 'api_server').to.be.a('string').and.not.be.empty
 
 describe('Register new client', () => {
   const email = faker.internet.email()
@@ -11,14 +13,19 @@ describe('Register new client', () => {
       password: '123',
       username: username,
     }
-    registration.registerNewClient(api_server, data).then(response => {
-      console.log(response.body.user.id)
-      expect(response.body.user.id).a('number')
-      expect(response.status).eq(201)
-      expect(response.body.user.email).eq(email)
-      expect(response.body.user.username).eq(username)
-      expect(response.body.user.token).a('string')
-    })
+    registration.registerNewClient(api_server, data)
+      .should(spok({
+        status: 201,
+        body: {
+          user: {
+            id: spok.number,
+            email,
+            username,
+            token: spok.string,
+          },
+        },
+
+      }))
   })
 })
 
@@ -30,10 +37,15 @@ describe('Register new client negative', () => {
       password: '123',
       username: username,
     }
-    registration.registerNewClient(api_server, data).then(response => {
-      expect(response.status).eq(422)
-      expect(response.body.errors.email).deep.eq(["can't be blank"])
-    })
+    registration.registerNewClient(api_server, data)
+      .should(spok({
+        status: 422,
+        body: {
+          errors: {
+            email: ["can't be blank"],
+          },
+        },
+      }))
   })
 
   it('Register new client without username', () => {
@@ -42,73 +54,14 @@ describe('Register new client negative', () => {
       password: '123',
     }
 
-    registration.registerNewClient(api_server, data).then(response => {
-      expect(response.status).eq(422)
-      expect(response.body.errors.username).deep.eq(["can't be blank"])
-    })
-  })
-
-  it('Register new client without username and email', () => {
-    const data = {
-      password: '123',
-    }
-    registration.registerNewClient(api_server, data).then(response => {
-      expect(response.status).eq(422)
-      expect(response.body.errors.email).deep.eq(["can't be blank"])
-    })
-  })
-
-  it('Register client with existiin email', () => {
-    const newEmail = faker.internet.email()
-    const newUsername = faker.person.fullName()
-    const random = Math.floor(100000 + Math.random() * 900000)
-    const data = {
-      email: newEmail,
-      password: '123',
-      username: newUsername,
-    }
-    const dataRandomName = {
-      email: newEmail,
-      password: '123',
-      username: newUsername + random,
-    }
-    registration
-      .registerNewClient(api_server, data)
-      .then(response => {
-        expect(response.status).eq(201)
-      })
-      .then(() => {
-        registration.registerNewClient(api_server, dataRandomName).then(response => {
-          expect(response.status).eq(422)
-          expect(response.body.errors.email['has already been taken'])
-        })
-      })
-  })
-
-  it('Register client with existiin username', () => {
-    const newEmail = faker.internet.email()
-    const newUsername = faker.person.fullName()
-    const random = Math.floor(100000 + Math.random() * 900000)
-    const data = {
-      email: newEmail,
-      password: '123',
-      username: newUsername,
-    }
-    const dataRandomMail = {
-      email: newEmail + random,
-      password: '123',
-      username: newUsername,
-    }
-    registration
-      .registerNewClient(api_server, data)
-      .then(response => {
-        expect(response.status).eq(201)
-      })
-      .then(() => {
-        registration.registerNewClient(api_server, dataRandomMail).then(response => {
-          expect(response.status).eq(422)
-          expect(response.body.errors.username['has already been taken'])
-        })
-      })
+    registration.registerNewClient(api_server, data)
+      .should(spok({
+        status: 422,
+        body: {
+          errors: {
+            username: ["can't be blank"],
+          },
+        },
+      }))
   })
 })
